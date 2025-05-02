@@ -37,7 +37,7 @@ export default function UserPostsPage() {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
-          `http://localhost:3004/api/v1/feed/posts?cursor=0&limit=50`,
+          `${process.env.NEXT_PUBLIC_PROD_URL}/feed/posts?cursor=0&limit=50`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

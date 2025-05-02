@@ -15,7 +15,7 @@ export async function createPost(formData: FormData) {
       throw new Error("Authentication required");
     }
     
-    const response = await fetch("http://localhost:3004/api/v1/feed/posts", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_PROD_URL}/feed/posts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

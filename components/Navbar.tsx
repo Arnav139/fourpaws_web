@@ -24,6 +24,33 @@ export function Navbar() {
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
 
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "auth_token") {
+        setIsAuthenticated(!!event.newValue);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleAuthChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      setIsAuthenticated(customEvent.detail.isAuthenticated);
+    };
+
+    window.addEventListener('authChange', handleAuthChange as EventListener);
+
+    return () => {
+      window.removeEventListener('authChange', handleAuthChange as EventListener);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     window.location.href = '/'; // Redirect to home page

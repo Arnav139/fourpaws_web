@@ -24,7 +24,7 @@ export default function Home() {
     let email = emailInput ? emailInput.value : '';
     setLoginButtonText('Getting OTP...');
     try {
-      const response = await axios.post('https://fourpaws-be.onrender.com/api/v1/auth/login', { email });
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_PROD_URL}/auth/login`, { email });
       localStorage.setItem("otp_token", response.data.token);
       setIsOtpSent(true);
       setCanResend(false);
@@ -44,13 +44,17 @@ export default function Home() {
     setVerifyButtonText('Verifying OTP...');
 
     try {
-      const response = await axios.post('https://fourpaws-be.onrender.com/api/v1/auth/verify-otp', { otp }, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_PROD_URL}/auth/verify-otp`, { otp }, {
         headers: { Authorization: `Bearer ${otpToken}` }
       });
       localStorage.setItem("auth_token", response.data.user.accessToken);
       localStorage.removeItem('otp_token');
       setAuthToken('verified');
-      otpInput.value = ''; 
+      otpInput.value = '';
+
+      // Emit custom event for authentication change
+      const authEvent = new CustomEvent('authChange', { detail: { isAuthenticated: true } });
+      window.dispatchEvent(authEvent);
     } catch (error) {
       console.error('Error verifying OTP:', error);
     } finally {

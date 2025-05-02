@@ -49,7 +49,7 @@ const PetFormsPage = () => {
   useEffect(() => {
     const fetchPetData = async () => {
       try {
-        const response = await fetch('http://localhost:3004/api/v1/pets/allPets', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_PROD_URL}/pets/allPets`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
