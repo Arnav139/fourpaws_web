@@ -41,21 +41,26 @@ export function Navbar() {
         </Link>
        
         <div className="flex-1 flex items-center justify-end space-x-4">
-          {pathname === '/create-post' || pathname === "/" ? (
-            <Link href="/user-posts" className="text-sm font-medium hover:text-primary transition-colors">
-              My Posts
-            </Link>
-          ) : (
-            <Link href="/create-post" className="text-sm font-medium hover:text-primary transition-colors">
-              Create Post
-            </Link>
-          )}
           {isAuthenticated && (
-            <button onClick={handleLogout} className="text-sm font-medium hover:text-primary transition-colors">
-              Logout
-            </button>
+            <>
+              {pathname === '/create-post' || pathname === "/" ? (
+                <Link href="/user-posts" className="text-sm font-medium hover:text-primary transition-colors">
+                  My Posts
+                </Link>
+              ) : (
+                <Link href="/create-post" className="text-sm font-medium hover:text-primary transition-colors">
+                  Create Post
+                </Link>
+              )}
+              <Link href="/pet-forms" className="text-sm font-medium hover:text-primary transition-colors">
+                Pet Forms
+              </Link>
+              <button onClick={handleLogout} className="text-sm font-medium hover:text-primary transition-colors">
+                Logout
+              </button>
+            </>
           )}
-          <ThemeToggle />
+            <ThemeToggle />
         </div>
       </div>
     </nav>
