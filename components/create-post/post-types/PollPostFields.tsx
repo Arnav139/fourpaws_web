@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -68,7 +75,7 @@ export function PollPostFields() {
         <FormDescription>Add at least 2 options for your poll.</FormDescription>
 
         <div className="space-y-3">
-          {pollOptions.map((option, index) => (
+          {pollOptions.map((option: string, index: number) => (
             <div key={index} className="flex gap-2">
               <Input
                 value={option}
