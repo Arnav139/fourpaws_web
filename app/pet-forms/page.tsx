@@ -38,6 +38,7 @@ interface Pet {
   color: string;
   weight: number;
   photoUrl: string;
+  mergedPdf: string | undefined;
 }
 
 const PetFormsPage = () => {
@@ -50,7 +51,7 @@ const PetFormsPage = () => {
     const fetchPetData = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_PROD_URL}/pets/allPets`,
+          `${process.env.NEXT_PUBLIC_PROD_URL}/pets/allPetsForms`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -100,14 +101,14 @@ const PetFormsPage = () => {
         Pet Profiles
       </h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        {petData.map((pet) => (
+        {petData?.map((pet) => (
           <div
             key={pet.id}
             className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col overflow-hidden"
           >
             <img
-              src={pet.photoUrl}
-              alt={pet.name}
+              src={pet?.photoUrl}
+              alt={pet?.name}
               className="w-full h-48 object-cover"
               onError={(e) => {
                 e.currentTarget.src =
@@ -116,33 +117,33 @@ const PetFormsPage = () => {
             />
             <div className="p-4 flex-1 flex flex-col">
               <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                {pet.name}
+                {pet?.name}
               </h2>
               <p className="text-gray-700 text-sm mb-2">
-                {pet.species} | {pet.breed} | {pet.gender}
+                {pet?.species} | {pet?.breed} | {pet?.gender}
               </p>
               <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                {pet.bio}
+                {pet?.bio}
               </p>
               <div className="text-sm text-gray-600 mb-2 grid grid-cols-2 gap-1">
                 <p>
                   <span className="font-medium">Born:</span>{" "}
-                  {new Date(pet.dateOfBirth).toLocaleDateString()}
+                  {new Date(pet?.dateOfBirth).toLocaleDateString()}
                 </p>
                 <p>
-                  <span className="font-medium">Age:</span> {pet.age} yrs
+                  <span className="font-medium">Age:</span> {pet?.age} yrs
                 </p>
                 <p>
-                  <span className="font-medium">Color:</span> {pet.color}
+                  <span className="font-medium">Color:</span> {pet?.color}
                 </p>
                 <p>
-                  <span className="font-medium">Weight:</span> {pet.weight} kg
+                  <span className="font-medium">Weight:</span> {pet?.weight} kg
                 </p>
               </div>
               <div className="mb-2">
                 <h3 className="text-sm font-medium text-gray-800">Traits</h3>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {pet.personalityTraits.slice(0, 3).map((trait, index) => (
+                  {pet?.personalityTraits?.slice(0, 3)?.map((trait, index) => (
                     <span
                       key={index}
                       className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
@@ -152,13 +153,13 @@ const PetFormsPage = () => {
                   ))}
                 </div>
               </div>
-              {pet.allergies.length > 0 && (
+              {pet?.allergies.length > 0 && (
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-800">
                     Allergies
                   </h3>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {pet.allergies.slice(0, 3).map((allergy, index) => (
+                    {pet?.allergies?.slice(0, 3)?.map((allergy, index) => (
                       <span
                         key={index}
                         className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded"
@@ -169,13 +170,13 @@ const PetFormsPage = () => {
                   </div>
                 </div>
               )}
-              {pet.medications.length > 0 && (
+              {pet?.medications.length > 0 && (
                 <div className="mb-2">
                   <h3 className="text-sm font-medium text-gray-800">
                     Medications
                   </h3>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {pet.medications.slice(0, 3).map((medication, index) => (
+                    {pet?.medications?.slice(0, 3)?.map((medication, index) => (
                       <span
                         key={index}
                         className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
@@ -187,9 +188,17 @@ const PetFormsPage = () => {
                 </div>
               )}
               <p className="text-xs text-gray-500 text-right">
-                Registered: {new Date(pet.createdAt).toLocaleDateString()}
+                Registered: {new Date(pet?.createdAt).toLocaleDateString()}
               </p>
             </div>
+            <a
+              href={pet?.mergedPdf}
+              download
+              target="_blank"
+              className="text-blue-500 hover:underline mt-2"
+            >
+              Download PDF
+            </a>
           </div>
         ))}
       </div>
