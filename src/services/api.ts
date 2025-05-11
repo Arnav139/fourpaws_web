@@ -8,16 +8,41 @@ interface ApiResponse<T> {
 }
 
 class ApiClient {
-  constructor(private baseURL: string) {}
+  constructor(
+    private baseURL: string,
+    private token?: () => Promise<string | null>,
+  ) {}
 
-  async get<T>(
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    return this.token ? { Authorization: `Bearer ${await this.token()}` } : {};
+  }
+
+  private async getHeaders(
+    headers: Record<string, string>,
+    contentType?: string,
+  ): Promise<Record<string, string>> {
+    return {
+      ...(contentType ? { "Content-Type": contentType } : {}),
+      ...headers,
+      ...(await this.getAuthHeaders()),
+    };
+  }
+
+  private async makeRequest<T>(
     url: string,
+    method: string,
+    body?: unknown,
     headers: Record<string, string> = {},
   ): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${url}`, {
-        method: "GET",
-        headers: headers,
+        method,
+        headers,
+        body: body
+          ? body instanceof FormData
+            ? body
+            : JSON.stringify(body)
+          : undefined,
       });
       return this.handleApiResponse<T>(response);
     } catch (error) {
@@ -25,24 +50,32 @@ class ApiClient {
     }
   }
 
+  async get<T>(
+    url: string,
+    headers: Record<string, string> = {},
+  ): Promise<ApiResponse<T>> {
+    return this.makeRequest<T>(
+      url,
+      "GET",
+      undefined,
+      await this.getHeaders(headers),
+    );
+  }
+
   async post<T>(
     url: string,
     body: unknown,
     headers: Record<string, string> = {},
   ): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${this.baseURL}${url}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
-        },
-        body: JSON.stringify(body),
-      });
-      return this.handleApiResponse<T>(response);
-    } catch (error) {
-      return this.handleUnsuccessfulResponse<T>(error);
-    }
+    const contentType =
+      body instanceof FormData ? "multipart/form-data" : "application/json";
+    console.log({ body, contentType });
+    return this.makeRequest<T>(
+      url,
+      "POST",
+      body,
+      await this.getHeaders(headers, contentType),
+    );
   }
 
   private async handleApiResponse<T>(

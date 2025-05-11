@@ -3,7 +3,7 @@ import ApiClient from "./api";
 
 const api = new ApiClient(process.env.NEXT_PUBLIC_PROD_URL!);
 
-export const user = {
+export const userService = {
   sendOtp: async (email: string) => {
     return await api.post<{ token: string }>("/auth/login", { email });
   },
