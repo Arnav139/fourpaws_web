@@ -17,50 +17,16 @@ import { PersonalityStep } from "@/components/pet/create-form/PersonalityStep";
 import { PetFormSchema } from "@/schema/pet";
 import { petService } from "@/services";
 import { calculateAgeFromDOB } from "@/lib/utils";
+import { petFormSteps } from "@/lib/config/pet";
 
 type FormData = z.infer<typeof PetFormSchema>;
-const steps: { label: string; key: keyof FormData }[] = [
-  { label: "Essentials", key: "applicantName" },
-  { label: "Details", key: "breed" },
-  { label: "Health", key: "sterilized" },
-  { label: "Personality", key: "bio" },
-  { label: "Documents", key: "vaccinationCard" },
-];
 
-const getFieldsForStep = (step: keyof FormData) => {
-  switch (step) {
-    case "applicantName":
-      return [
-        "applicantName",
-        "guardianName",
-        "residentialAddress",
-        "petName",
-        "petProfileImage",
-      ];
-    case "breed":
-      return ["breed", "gender", "size", "species"];
-    case "sterilized":
-      return ["sterilized", "allergies", "medications"];
-    case "bio":
-      return ["bio", "personalityTraits"];
-    case "vaccinationCard":
-      return [
-        "veterinaryHealthCard",
-        "vaccinationCard",
-        "passport",
-        "imageWithOwner",
-        "ownerIdProof",
-        "sterilizationCard",
-      ];
-
-    default:
-      return [];
-  }
+const getFieldsForStep = (stepToValidate: string) => {
+  return petFormSteps.find((step) => step.key === stepToValidate)?.fields ?? [];
 };
 
 export default function CreatePetPage() {
-  const [currentStep, setCurrentStep] =
-    useState<keyof FormData>("applicantName");
+  const [currentStep, setCurrentStep] = useState("essentials");
 
   const methods = useForm<FormData>({
     resolver: zodResolver(PetFormSchema),
@@ -68,6 +34,10 @@ export default function CreatePetPage() {
   });
 
   const handleSubmit = async (data: FormData) => {
+    const allFieldsValid = await methods.trigger();
+    if (!allFieldsValid) {
+      return;
+    }
     console.log("Submitting pet profile:", data);
 
     const formData = new FormData();
@@ -132,36 +102,38 @@ export default function CreatePetPage() {
   };
 
   const nextStep = async () => {
-    const currentIndex = steps.findIndex((step) => step.key === currentStep);
-    const fieldsToValidate = getFieldsForStep(currentStep);
-    const isValid = await methods.trigger(
-      fieldsToValidate as unknown as keyof FormData,
+    const currentIndex = petFormSteps.findIndex(
+      (step) => step.key === currentStep,
     );
+    const fieldsToValidate = getFieldsForStep(currentStep);
+    const isValid = await methods.trigger(fieldsToValidate);
 
-    if (isValid && currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1].key);
+    if (isValid && currentIndex < petFormSteps.length - 1) {
+      setCurrentStep(petFormSteps[currentIndex + 1].key);
     }
     sessionStorage.setItem("petFormData", JSON.stringify(methods.getValues()));
   };
 
   const prevStep = () => {
-    const currentIndex = steps.findIndex((step) => step.key === currentStep);
+    const currentIndex = petFormSteps.findIndex(
+      (step) => step.key === currentStep,
+    );
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1].key);
+      setCurrentStep(petFormSteps[currentIndex - 1].key);
     }
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case "applicantName":
+      case "essentials":
         return <EssentialsStep />;
-      case "breed":
+      case "details":
         return <DetailsStep />;
-      case "sterilized":
+      case "health":
         return <HealthStep />;
-      case "bio":
+      case "personality":
         return <PersonalityStep />;
-      case "vaccinationCard":
+      case "documents":
         return <DocumentsStep />;
       default:
         return null;
@@ -177,7 +149,7 @@ export default function CreatePetPage() {
     for (const [key, value] of Object.entries(petFormData)) {
       methods.setValue(key, value);
     }
-  });
+  }, []);
 
   return (
     <div className="flex-1 grid place-items-center">
@@ -188,16 +160,17 @@ export default function CreatePetPage() {
         <CardContent>
           <div className="mb-8">
             <div className="flex justify-between items-center">
-              {steps.map((step, index) => (
+              {petFormSteps.map((step, index) => (
                 <div
                   key={step.label}
-                  className={`flex pb-4 items-center ${index === steps.length - 1 ? "" : "flex-1"}`}
+                  className={`flex pb-4 items-center ${index === petFormSteps.length - 1 ? "" : "flex-1"}`}
                 >
                   <div className="relative">
                     <div
                       className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                        steps.findIndex((step) => step.key === currentStep) >=
-                        index
+                        petFormSteps.findIndex(
+                          (step) => step.key === currentStep,
+                        ) >= index
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-secondary-foreground"
                       }`}
@@ -206,15 +179,19 @@ export default function CreatePetPage() {
                     </div>
                     {step.key === currentStep && (
                       <div className="mt-2 absolute left-1/2 -translate-x-1/2 text-center text-xs font-medium">
-                        {steps.find((step) => step.key === currentStep)?.label}
+                        {
+                          petFormSteps.find((step) => step.key === currentStep)
+                            ?.label
+                        }
                       </div>
                     )}
                   </div>
-                  {index < steps.length - 1 && (
+                  {index < petFormSteps.length - 1 && (
                     <div
                       className={`flex-1 h-1 mx-2 ${
-                        steps.findIndex((step) => step.key === currentStep) >
-                        index
+                        petFormSteps.findIndex(
+                          (step) => step.key === currentStep,
+                        ) > index
                           ? "bg-primary"
                           : "bg-secondary"
                       }`}
@@ -236,11 +213,11 @@ export default function CreatePetPage() {
                   type="button"
                   variant="outline"
                   onClick={prevStep}
-                  disabled={currentStep === steps[0].key}
+                  disabled={currentStep === petFormSteps[0].key}
                 >
                   Back
                 </Button>
-                {currentStep === steps[steps.length - 1].key ? (
+                {currentStep === petFormSteps[petFormSteps.length - 1].key ? (
                   <Button type="submit">Submit</Button>
                 ) : (
                   <Button type="button" onClick={nextStep}>
