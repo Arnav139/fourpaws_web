@@ -7,17 +7,20 @@ export const PetFormSchema = z.object({
   residentialAddress: z
     .string()
     .min(1, { message: "Residential address is required." }),
-  petName: z.string().min(1, { message: "Pet name is required." }),
+  name: z.string().min(1, { message: "Pet name is required." }),
   species: z.string().min(1, { message: "Species is required." }),
   breed: z.string(),
   gender: z.string(),
   size: z.string(),
   sterilized: z.boolean().optional(),
+  governmentRegistered: z.boolean().optional(),
+  registrationNumber: z.string().optional(),
   allergies: z.array(z.string()),
   medications: z.array(z.string()),
+  personalityTraits: z.array(z.string()),
   bio: z.string(),
-  personalityTraits: z.array(z.string()).optional(),
   petProfileImage: ImageSchema,
+  dob: z.string(),
   // additionalImages: z.array(ImageSchema),
 
   ownerIdProof: ImageSchema,

@@ -56,3 +56,26 @@ export function getPetSpeciesColor(species: string): string {
 
   return colorMap[species] || "text-gray-500";
 }
+
+export const calculateAgeFromDOB = (dob?: string): string => {
+  if (!dob) return "0";
+
+  const birthDate = new Date(dob);
+  const today = new Date();
+
+  let years = today.getFullYear() - birthDate.getFullYear();
+  const months = today.getMonth() - birthDate.getMonth();
+
+  // Adjust years if birth month hasn't occurred yet this year
+  if (months < 0 || (months === 0 && today.getDate() < birthDate.getDate())) {
+    years--;
+  }
+
+  if (years > 0) {
+    return `${years}`;
+  } else {
+    // Calculate months instead
+    const monthAge = months + (months < 0 ? 12 : 0);
+    return `${monthAge} months`;
+  }
+};

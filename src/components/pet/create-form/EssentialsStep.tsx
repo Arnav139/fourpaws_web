@@ -18,7 +18,7 @@ export function EssentialsStep() {
       />
       <PawFormField
         label="Pet Name"
-        name="petName"
+        name="name"
         render={(field) => <Input placeholder="Pet name" {...field} />}
       />
       <PawFormField

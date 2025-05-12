@@ -4,8 +4,12 @@ import { PawFormField } from "@/components/common/PawFormField";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { InputTags } from "@/components/common/InputTags";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export function HealthStep() {
+  const [governmentRegistered, setGovernmentRegistered] = useState(false);
+
   return (
     <>
       <PawFormField
@@ -17,6 +21,32 @@ export function HealthStep() {
           </div>
         )}
       />
+      <PawFormField
+        name="governmentRegistered"
+        label="Government Registered"
+        render={(field) => (
+          <div className="flex items-center justify-between">
+            <Switch
+              checked={field.value}
+              onCheckedChange={(registered) => {
+                field.onChange(registered);
+                setGovernmentRegistered(registered);
+              }}
+            />
+          </div>
+        )}
+      />
+
+      {governmentRegistered && (
+        <PawFormField
+          label="Registration Number"
+          name="registrationNumber"
+          render={(field) => (
+            <Input placeholder="Registration number" {...field} />
+          )}
+        />
+      )}
+
       <PawFormField
         name="allergies"
         label="Allergies (comma-separated)"

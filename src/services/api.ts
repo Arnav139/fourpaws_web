@@ -68,7 +68,7 @@ class ApiClient {
     headers: Record<string, string> = {},
   ): Promise<ApiResponse<T>> {
     const contentType =
-      body instanceof FormData ? "multipart/form-data" : "application/json";
+      body instanceof FormData ? undefined : "application/json";
     console.log({ body, contentType });
     return this.makeRequest<T>(
       url,

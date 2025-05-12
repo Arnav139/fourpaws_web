@@ -16,6 +16,7 @@ import { PersonalityStep } from "@/components/pet/create-form/PersonalityStep";
 
 import { PetFormSchema } from "@/schema/pet";
 import { petService } from "@/services";
+import { calculateAgeFromDOB } from "@/lib/utils";
 
 type FormData = z.infer<typeof PetFormSchema>;
 const steps: { label: string; key: keyof FormData }[] = [
@@ -83,13 +84,19 @@ export default function CreatePetPage() {
       }
       if (
         [
+          "ownerIdProof",
+          "imageWithOwner",
+          "vaccinationCard",
+          "passport",
+          "veterinaryHealthCard",
+          "sterilizationCard",
           "registrationNumber",
           "governmentRegistered",
+          "sterilized",
           "name",
           "species",
           "breed",
           "gender",
-          "sterilized",
           "bio",
           "dateOfBirth",
           "personalityTraits",
@@ -98,8 +105,15 @@ export default function CreatePetPage() {
           "additionalImages",
         ].includes(key)
       ) {
-        formData.append(key, value);
+        if (["allergies", "medications", "personalityTraits"].includes(key)) {
+          formData.append(key, JSON.stringify(value));
+        } else if (["governmentRegistered", "sterilized"].includes(key)) {
+          formData.append(key, value ? "true" : "false");
+        } else {
+          formData.append(key, value);
+        }
       } else if (key === "petProfileImage") {
+        console.log(key, value);
         formData.append("image", value);
       }
     }
@@ -107,7 +121,7 @@ export default function CreatePetPage() {
     formData.append(
       "metaData",
       JSON.stringify({
-        age: data.age,
+        age: calculateAgeFromDOB(data.dob),
         size: data.size,
         color: data.color,
         weight: data.weight,
