@@ -6,43 +6,50 @@ import { Textarea } from "@/components/ui/textarea";
 import { InputTags } from "@/components/common/InputTags";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { FormLabel } from "@/components/ui/form";
 
 export function HealthStep() {
   const [governmentRegistered, setGovernmentRegistered] = useState(false);
 
   return (
     <>
-      <PawFormField
-        name="sterilized"
-        label="Sterilized"
-        render={(field) => (
-          <div className="flex items-center justify-between">
-            <Switch checked={field.value} onCheckedChange={field.onChange} />
-          </div>
-        )}
-      />
-      <PawFormField
-        name="governmentRegistered"
-        label="Government Registered"
-        render={(field) => (
-          <div className="flex items-center justify-between">
-            <Switch
-              checked={field.value}
-              onCheckedChange={(registered) => {
-                field.onChange(registered);
-                setGovernmentRegistered(registered);
-              }}
-            />
-          </div>
-        )}
-      />
+      <div className="flex flex-wrap gap-6 h-max items-start">
+        <PawFormField
+          name="sterilized"
+          render={(field) => (
+            <div className="inline-flex gap-2 items-center justify-between">
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <FormLabel>Sterilized</FormLabel>
+            </div>
+          )}
+        />
+        <PawFormField
+          name="governmentRegistered"
+          render={(field) => (
+            <div className="inline-flex gap-2 items-center justify-between">
+              <Switch
+                checked={field.value}
+                onCheckedChange={(registered) => {
+                  field.onChange(registered);
+                  setGovernmentRegistered(registered);
+                }}
+              />
+              <FormLabel>Government Registered</FormLabel>
+            </div>
+          )}
+        />
+      </div>
 
       {governmentRegistered && (
         <PawFormField
           label="Registration Number"
           name="registrationNumber"
           render={(field) => (
-            <Input placeholder="Registration number" {...field} />
+            <Input
+              placeholder="Registration number"
+              defaultValue={field.value}
+              onChange={field.onChange}
+            />
           )}
         />
       )}
@@ -51,14 +58,22 @@ export function HealthStep() {
         name="allergies"
         label="Allergies (comma-separated)"
         render={(field) => (
-          <InputTags placeholder="e.g., pollen, dust" {...field} />
+          <InputTags
+            placeholder="e.g., pollen, dust"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
       <PawFormField
         name="medications"
         label="Medications (comma-separated)"
         render={(field) => (
-          <InputTags placeholder="e.g., aspirin, ibuprofen" {...field} />
+          <InputTags
+            placeholder="e.g., aspirin, ibuprofen"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
       <PawFormField
@@ -67,7 +82,8 @@ export function HealthStep() {
         render={(field) => (
           <Textarea
             placeholder="Describe any special health needs"
-            {...field}
+            defaultValue={field.value}
+            onChange={field.onChange}
           />
         )}
       />

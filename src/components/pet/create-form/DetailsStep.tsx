@@ -27,7 +27,13 @@ export function DetailsStep() {
       <PawFormField
         name="breed"
         label="Breed"
-        render={(field) => <Input placeholder="Breed" {...field} />}
+        render={(field) => (
+          <Input
+            placeholder="Breed"
+            defaultValue={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
 
       <div className="flex flex-wrap gap-2.5 h-max items-start">
@@ -86,7 +92,7 @@ export function DetailsStep() {
           )}
         />
       </div>
-      <div className="flex gap-2.5 flex-wrap">
+      <div className="flex flex-wrap gap-2.5 h-max items-start">
         <PawFormField
           name="dob"
           label="Date of Birth"
@@ -126,7 +132,12 @@ export function DetailsStep() {
           name="weight"
           label="Weight"
           render={(field) => (
-            <Input type="number" placeholder="Weight in kg" {...field} />
+            <Input
+              type="number"
+              placeholder="Weight in kg"
+              defaultValue={field.value}
+              onChange={field.onChange}
+            />
           )}
         />
       </div>

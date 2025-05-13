@@ -18,6 +18,8 @@ import { PetFormSchema } from "@/schema/pet";
 import { petService } from "@/services";
 import { calculateAgeFromDOB } from "@/lib/utils";
 import { petFormSteps } from "@/lib/config/pet";
+import { toast } from "sonner";
+import SubmitButton from "@/components/common/SubmitButton";
 
 type FormData = z.infer<typeof PetFormSchema>;
 
@@ -27,78 +29,96 @@ const getFieldsForStep = (stepToValidate: string) => {
 
 export default function CreatePetPage() {
   const [currentStep, setCurrentStep] = useState("essentials");
+  const [petProfileImage, setPetProfileImage] = useState<File | null>(null);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(PetFormSchema),
     defaultValues: {},
   });
 
-  const handleSubmit = async (data: FormData) => {
-    const allFieldsValid = await methods.trigger();
-    if (!allFieldsValid) {
-      return;
-    }
-    console.log("Submitting pet profile:", data);
+  const formValues = methods.getValues();
 
-    const formData = new FormData();
+  console.log("petProfileImage", petProfileImage);
 
-    // Add each property from data to formData
-    for (const [key, value] of Object.entries(data)) {
-      if (
-        key === "age" ||
-        key === "size" ||
-        key === "color" ||
-        key === "weight"
-      ) {
-        continue;
-      }
-      if (
-        [
-          "ownerIdProof",
-          "imageWithOwner",
-          "vaccinationCard",
-          "passport",
-          "veterinaryHealthCard",
-          "sterilizationCard",
-          "registrationNumber",
-          "governmentRegistered",
-          "sterilized",
-          "name",
-          "species",
-          "breed",
-          "gender",
-          "bio",
-          "dateOfBirth",
-          "personalityTraits",
-          "allergies",
-          "medications",
-          "additionalImages",
-        ].includes(key)
-      ) {
-        if (["allergies", "medications", "personalityTraits"].includes(key)) {
-          formData.append(key, JSON.stringify(value));
-        } else if (["governmentRegistered", "sterilized"].includes(key)) {
-          formData.append(key, value ? "true" : "false");
-        } else {
-          formData.append(key, value);
-        }
-      } else if (key === "petProfileImage") {
-        console.log(key, value);
-        formData.append("image", value);
-      }
-    }
-
-    formData.append(
-      "metaData",
-      JSON.stringify({
-        age: calculateAgeFromDOB(data.dob),
-        size: data.size,
-        color: data.color,
-        weight: data.weight,
-      }),
+  const handleSubmit = async () => {
+    console.log(
+      "Please ensure all fields are filled out correctly before proceeding.",
     );
+    try {
+      const data = methods.getValues();
+      const allFieldsValid = await methods.trigger();
+      if (!allFieldsValid) {
+        return;
+      }
+      console.log("Submitting pet profile:", data, petProfileImage);
 
-    console.log(await petService.createPet(formData));
+      const formData = new FormData();
+
+      // Add each property from data to formData
+      for (const [key, value] of Object.entries(data)) {
+        if (
+          key === "age" ||
+          key === "size" ||
+          key === "color" ||
+          key === "weight"
+        ) {
+          continue;
+        }
+        if (
+          [
+            "ownerIdProof",
+            "imageWithOwner",
+            "vaccinationCard",
+            "passport",
+            "veterinaryHealthCard",
+            "sterilizationCard",
+            "registrationNumber",
+            "governmentRegistered",
+            "sterilized",
+            "name",
+            "species",
+            "breed",
+            "gender",
+            "bio",
+            "dateOfBirth",
+            "personalityTraits",
+            "allergies",
+            "medications",
+            "additionalImages",
+          ].includes(key)
+        ) {
+          if (["allergies", "medications", "personalityTraits"].includes(key)) {
+            formData.append(key, JSON.stringify(value));
+          } else if (["governmentRegistered", "sterilized"].includes(key)) {
+            formData.append(key, value ? "true" : "false");
+          } else {
+            formData.append(key, value);
+          }
+        }
+      }
+
+      formData.append("image", petProfileImage!);
+      formData.append(
+        "metaData",
+        JSON.stringify({
+          age: calculateAgeFromDOB(data.dob),
+          size: data.size,
+          color: data.color,
+          weight: data.weight,
+        }),
+      );
+
+      const response = await petService.createPet(formData);
+      console.log(response);
+
+      if (!response.success) {
+        toast.error(
+          response.error || "Something went wrong, please try again later!",
+        );
+      }
+    } catch (err) {
+      console.log("ejkdvhkdfjvdkvgsdfg", err);
+    }
   };
 
   const nextStep = async () => {
@@ -106,12 +126,16 @@ export default function CreatePetPage() {
       (step) => step.key === currentStep,
     );
     const fieldsToValidate = getFieldsForStep(currentStep);
-    const isValid = await methods.trigger(fieldsToValidate);
+    const isValid = await methods.trigger(
+      fieldsToValidate as unknown as keyof FormData,
+    );
 
     if (isValid && currentIndex < petFormSteps.length - 1) {
       setCurrentStep(petFormSteps[currentIndex + 1].key);
     }
-    sessionStorage.setItem("petFormData", JSON.stringify(methods.getValues()));
+
+    console.log(methods.getValues());
+    // sessionStorage.setItem("petFormData", JSON.stringify(methods.getValues()));
   };
 
   const prevStep = () => {
@@ -139,6 +163,10 @@ export default function CreatePetPage() {
         return null;
     }
   };
+
+  useEffect(() => {
+    setPetProfileImage(formValues.petProfileImage);
+  }, [formValues.petProfileImage]);
 
   useEffect(() => {
     const petDataString = sessionStorage.getItem("petFormData");
@@ -203,10 +231,7 @@ export default function CreatePetPage() {
           </div>
 
           <FormProvider {...methods}>
-            <form
-              onSubmit={methods.handleSubmit(handleSubmit)}
-              className="space-y-6"
-            >
+            <form action={handleSubmit} className="space-y-6">
               {renderStepContent()}
               <div className="flex justify-between mt-6">
                 <Button
@@ -218,7 +243,7 @@ export default function CreatePetPage() {
                   Back
                 </Button>
                 {currentStep === petFormSteps[petFormSteps.length - 1].key ? (
-                  <Button type="submit">Submit</Button>
+                  <SubmitButton label="Submit" />
                 ) : (
                   <Button type="button" onClick={nextStep}>
                     Next

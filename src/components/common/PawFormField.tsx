@@ -14,7 +14,7 @@ import {
 
 interface PawFormFieldProps {
   name: string;
-  label: string;
+  label?: string;
   render: (
     field: ControllerRenderProps<FieldValues, string>,
   ) => React.ReactNode;
@@ -33,7 +33,7 @@ export const PawFormField: React.FC<PawFormFieldProps> = ({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          {label && <FormLabel>{label}</FormLabel>}
           <FormControl>{render(field)}</FormControl>
           <FormMessage />
         </FormItem>

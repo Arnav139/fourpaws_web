@@ -22,12 +22,12 @@ const SubmitButton = ({
       {render
         ? render(pending)
         : pending
-          ? label
-            ? label
-            : "Submit"
-          : loadingLabel
+          ? loadingLabel
             ? loadingLabel
-            : "Submitting"}
+            : "Submitting"
+          : label
+            ? label
+            : "Submit"}
     </Button>
   );
 };

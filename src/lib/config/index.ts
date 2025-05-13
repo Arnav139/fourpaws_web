@@ -117,4 +117,9 @@ export const chartColors = [
   "hsl(var(--chart-5))",
 ];
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
-export const ACCEPTED_IMAGE_TYPES = [".jpg", ".jpeg", ".png", ".webp"];
+export const ACCEPTED_IMAGE_TYPES = [
+  "image/jpg",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];

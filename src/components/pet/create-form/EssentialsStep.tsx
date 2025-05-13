@@ -12,6 +12,7 @@ export function EssentialsStep() {
         name="petProfileImage"
         render={(field) => (
           <ImagePicker
+            defaultImages={field.value ? [field.value as File] : []}
             onImageChange={(files) => field.onChange(files?.[0] || null)}
           />
         )}
@@ -19,23 +20,45 @@ export function EssentialsStep() {
       <PawFormField
         label="Pet Name"
         name="name"
-        render={(field) => <Input placeholder="Pet name" {...field} />}
+        render={(field) => (
+          <Input
+            placeholder="Pet name"
+            defaultValue={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
       <PawFormField
         label="Applicant Name"
         name="applicantName"
-        render={(field) => <Input placeholder="Applicant name" {...field} />}
+        render={(field) => (
+          <Input
+            placeholder="Applicant name"
+            defaultValue={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
       <PawFormField
         label="Guardian Name"
         name="guardianName"
-        render={(field) => <Input placeholder="Guardian name" {...field} />}
+        render={(field) => (
+          <Input
+            placeholder="Guardian name"
+            defaultValue={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
       <PawFormField
         label="Residential Address"
         name="residentialAddress"
         render={(field) => (
-          <Input placeholder="Residential address" {...field} />
+          <Input
+            placeholder="Residential address"
+            defaultValue={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
     </>
