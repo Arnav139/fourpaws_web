@@ -23,7 +23,7 @@ export function EssentialsStep() {
         render={(field) => (
           <Input
             placeholder="Pet name"
-            defaultValue={field.value}
+            value={field.value ?? ""}
             onChange={field.onChange}
           />
         )}
@@ -34,7 +34,7 @@ export function EssentialsStep() {
         render={(field) => (
           <Input
             placeholder="Applicant name"
-            defaultValue={field.value}
+            value={field.value ?? ""}
             onChange={field.onChange}
           />
         )}
@@ -45,7 +45,7 @@ export function EssentialsStep() {
         render={(field) => (
           <Input
             placeholder="Guardian name"
-            defaultValue={field.value}
+            value={field.value ?? ""}
             onChange={field.onChange}
           />
         )}
@@ -56,7 +56,7 @@ export function EssentialsStep() {
         render={(field) => (
           <Input
             placeholder="Residential address"
-            defaultValue={field.value}
+            value={field.value ?? ""}
             onChange={field.onChange}
           />
         )}

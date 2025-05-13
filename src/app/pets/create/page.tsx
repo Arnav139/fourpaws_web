@@ -16,7 +16,7 @@ import { PersonalityStep } from "@/components/pet/create-form/PersonalityStep";
 
 import { PetFormSchema } from "@/schema/pet";
 import { petService } from "@/services";
-import { calculateAgeFromDOB } from "@/lib/utils";
+import { calculateAgeFromDOB, downloadPDF } from "@/lib/utils";
 import { petFormSteps } from "@/lib/config/pet";
 import { toast } from "sonner";
 import SubmitButton from "@/components/common/SubmitButton";
@@ -30,6 +30,10 @@ const getFieldsForStep = (stepToValidate: string) => {
 export default function CreatePetPage() {
   const [currentStep, setCurrentStep] = useState("essentials");
   const [petProfileImage, setPetProfileImage] = useState<File | null>(null);
+  const [additionalImages, setadditionalImages] = useState<File[] | null>(null);
+
+  // const [petProfileImage, setPetProfileImage] = useState<File | null>(null);
+  // const [petProfileImage, setPetProfileImage] = useState<File | null>(null);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(PetFormSchema),
@@ -115,6 +119,12 @@ export default function CreatePetPage() {
         toast.error(
           response.error || "Something went wrong, please try again later!",
         );
+      } else if (response.data) {
+        toast.success("Pet added successfully!");
+        console.log((response.data as { mergedPdfBase64: string }).mergedPdfBase64)
+        downloadPDF((response.data as { mergedPdfBase64: string }).mergedPdfBase64)
+        sessionStorage.setItem("petFormData", JSON.stringify({}));
+        setTimeout(() => {window.navigation.reload()} , 1000)
       }
     } catch (err) {
       console.log("ejkdvhkdfjvdkvgsdfg", err);
@@ -135,7 +145,7 @@ export default function CreatePetPage() {
     }
 
     console.log(methods.getValues());
-    // sessionStorage.setItem("petFormData", JSON.stringify(methods.getValues()));
+    sessionStorage.setItem("petFormData", JSON.stringify(methods.getValues()));
   };
 
   const prevStep = () => {
@@ -166,7 +176,8 @@ export default function CreatePetPage() {
 
   useEffect(() => {
     setPetProfileImage(formValues.petProfileImage);
-  }, [formValues.petProfileImage]);
+    // setadditionalImages(formValues.ad)
+  }, [formValues]);
 
   useEffect(() => {
     const petDataString = sessionStorage.getItem("petFormData");
@@ -195,13 +206,12 @@ export default function CreatePetPage() {
                 >
                   <div className="relative">
                     <div
-                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                        petFormSteps.findIndex(
-                          (step) => step.key === currentStep,
-                        ) >= index
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${petFormSteps.findIndex(
+                        (step) => step.key === currentStep,
+                      ) >= index
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-secondary-foreground"
-                      }`}
+                        }`}
                     >
                       {index + 1}
                     </div>
@@ -216,13 +226,12 @@ export default function CreatePetPage() {
                   </div>
                   {index < petFormSteps.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-2 ${
-                        petFormSteps.findIndex(
-                          (step) => step.key === currentStep,
-                        ) > index
+                      className={`flex-1 h-1 mx-2 ${petFormSteps.findIndex(
+                        (step) => step.key === currentStep,
+                      ) > index
                           ? "bg-primary"
                           : "bg-secondary"
-                      }`}
+                        }`}
                     />
                   )}
                 </div>

@@ -79,3 +79,35 @@ export const calculateAgeFromDOB = (dob?: string): string => {
     return `${monthAge} months`;
   }
 };
+
+
+export const downloadPDF = (base64PDF:string) => {
+  // Decode the base64 string to a binary string
+  const byteCharacters = atob(base64PDF);  // atob decodes a base64 string
+  const byteArrays: number[] = [];
+
+  // Convert the binary string to a byte array
+  for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+    const slice = byteCharacters.slice(offset, offset + 1024);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    byteArrays.push(...byteNumbers);
+  }
+
+  // Create a Blob from the byte array
+  const blob = new Blob([new Uint8Array(byteArrays)], { type: 'application/pdf' });
+
+  // Create a temporary URL for the Blob
+  const url = URL.createObjectURL(blob);
+
+  // Create a link element and simulate a click to trigger the download
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'download.pdf'; // You can specify the file name here
+  a.click();
+
+  // Clean up the Blob URL
+  URL.revokeObjectURL(url);
+};

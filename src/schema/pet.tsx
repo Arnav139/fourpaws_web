@@ -40,12 +40,13 @@ export const PetFormSchema = z.object({
     .min(1, { message: "Personality traits cannot be empty." }),
   bio: z.string().min(1, { message: "A bio must be provided." }),
   petProfileImage: ImageSchema,
-  dob: z
-    .date()
-    .nullable()
-    .refine((v) => v != null, {
-      message: "Date of birth must be a valid date.",
-    }),
+  dob: z.any(),
+
+  additionalImages: z.any().optional(),
+    // .nullable()
+    // .refine((v) => v != null, {
+    //   message: "Date of birth must be a valid date.",
+    // }),
   // additionalImages: z.array(ImageSchema),
 
   ownerIdProof: DocumentSchema,

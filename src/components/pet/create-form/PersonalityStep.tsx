@@ -40,11 +40,9 @@ export function PersonalityStep() {
         render={(field) => (
           <ImagePicker
             multiple
-            maxImages={10}
-            onImageChange={(files) => {
-              handleImageChange(files);
-              field.onChange(files);
-            }}
+            maxImages={6}
+            defaultImages={field.value ? [field.value] as File[] : []}
+            onImageChange={(files) => {handleImageChange(files); field.onChange(files || null)}}
           />
         )}
       />

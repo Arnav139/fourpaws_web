@@ -52,10 +52,12 @@ export const FilePicker: React.FC<FilePickerProps> = ({
         {filePreviews.map((fileName, index) => (
           <div
             key={index}
+            className="flex items-center justify-center"
             style={{
               position: "relative",
-              padding: "4px",
-              border: "1px solid #ccc",
+              width: "100px",
+              height: "100px",
+              border: "2px solid #ccc",
               borderRadius: "5px",
             }}
           >
@@ -63,7 +65,7 @@ export const FilePicker: React.FC<FilePickerProps> = ({
             <Button
               onClick={() => removeFile(index)}
               variant="destructive"
-              className="size-6 cursor-pointer aspect-square p-0 absolute top-0.5 right-0.5"
+              className="size-6 cursor-pointer aspect-square p-0 w-fit absolute top-0 right-0.5"
             >
               <XIcon />
             </Button>
