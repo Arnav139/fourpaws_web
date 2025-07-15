@@ -1,137 +1,118 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, PawPrint as Paw } from "lucide-react";
+
 import Link from "next/link";
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { PawPrint as Paw, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import * as clientApi from "@/services/clientApi";
+
+const Loading = () => (
+  <div className="flex min-h-screen items-center justify-center text-orange-600 dark:text-orange-400">
+    Loading...
+  </div>
+);
+
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div className="flex min-h-screen items-center justify-center text-red-600 dark:text-red-400">
+    <p>{message}</p>
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="flex min-h-screen flex-col items-center justify-center text-orange-700 dark:text-orange-300 select-none px-4 text-center">
+    <Paw className="mb-4 h-16 w-16 animate-bounce" />
+    <h1 className="text-3xl font-extrabold mb-2">Welcome to FourPaws Admin</h1>
+    <p className="mb-6 max-w-md text-center">
+      Get started by managing pets, creating profiles, and viewing pet forms.
+    </p>
+    <Link
+      href="/create-pet"
+      className="inline-flex items-center rounded bg-orange-600 px-6 py-3 text-white shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+    >
+      Create a Pet
+      <ArrowRight className="ml-2 h-5 w-5" />
+    </Link>
+  </div>
+);
 
 export default function Home() {
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [canResend, setCanResend] = useState(false);
-  const [loginButtonText, setLoginButtonText] = useState('Login');
-  const [verifyButtonText, setVerifyButtonText] = useState('Verify OTP');
+  const [authStatus, setAuthStatus] = useState<{
+    isAuthenticated: boolean;
+    user: any | null;
+    token: string | null;
+  } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    setAuthToken(token);
-    setIsAuthChecked(true); // Ensures auth check is done before rendering
+    (async () => {
+      try {
+        const res = await clientApi.getAuthStatus();
+        setAuthStatus(res);
+      } catch {
+        setAuthStatus({ isAuthenticated: false, user: null, token: null });
+      }
+    })();
   }, []);
 
-  const handleLoginClick = async () => {
-    const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-    let email = emailInput ? emailInput.value : '';
-    setLoginButtonText('Getting OTP...');
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_PROD_URL}/auth/login`, { email });
-      localStorage.setItem("otp_token", response.data.token);
-      setIsOtpSent(true);
-      setCanResend(false);
-      setTimeout(() => setCanResend(true), 120000);
-      emailInput.value = ''; // Clear input field
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-    } finally {
-      setLoginButtonText('Login');
-    }
-  };
+  if (!authStatus) {
+    return <Loading />;
+  }
 
-  const handleVerifyOtpClick = async () => {
-    const otpInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-    const otp = otpInput ? otpInput.value : '';
-    const otpToken = localStorage.getItem('otp_token');
-    setVerifyButtonText('Verifying OTP...');
+  const { isAuthenticated } = authStatus;
 
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_PROD_URL}/auth/verify-otp`, { otp }, {
-        headers: { Authorization: `Bearer ${otpToken}` }
-      });
-      localStorage.setItem("auth_token", response.data.user.accessToken);
-      localStorage.removeItem('otp_token');
-      setAuthToken('verified');
-      otpInput.value = '';
-
-      // Emit custom event for authentication change
-      const authEvent = new CustomEvent('authChange', { detail: { isAuthenticated: true } });
-      window.dispatchEvent(authEvent);
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-    } finally {
-      setVerifyButtonText('Verify OTP');
-    }
-  };
-
-  if (!isAuthChecked) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center text-orange-700 dark:text-orange-300 select-none px-4 text-center">
+        <Paw className="mb-4 h-16 w-16 animate-bounce" />
+        <h1 className="text-3xl font-extrabold mb-2">
+          Welcome to FourPaws Admin
+        </h1>
+        <p className="mb-6 max-w-md">
+          Please log in to manage pets, create profiles, and view pet forms.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex items-center rounded bg-orange-600 px-6 py-3 text-white shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        >
+          Login
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <div className="max-w-3xl mx-auto text-center space-y-8">
-        <div className="flex justify-center mb-8">
-          <Paw className="h-16 w-16 text-primary animate-bounce" />
-        </div>
+    <div className="container mx-auto py-12 px-4 flex flex-col items-center text-center max-w-4xl select-none">
+      <div className="flex justify-center mb-8">
+        <Paw className="h-16 w-16 text-orange-600 animate-bounce dark:text-orange-400" />
+      </div>
 
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-          Create and Share Pet Stories
-        </h1>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-wide text-orange-900 dark:text-orange-200 mb-4">
+        Manage Pets with FourPaws Admin
+      </h1>
 
-        <p className="text-lg text-muted-foreground">
-          Join our vibrant community of pet lovers. Share stories, find help, and connect with fellow animal enthusiasts.
-        </p>
+      <p className="text-lg text-orange-800 dark:text-orange-300 mb-8">
+        Create new pet profiles, view submitted pet forms, and oversee your pet
+        community effectively.
+      </p>
 
-        <div className="flex justify-center">
-          {authToken ? (
-            <Link href="/create-post">
-              <Button size="lg" className="comic-button group">
-                Create a Post
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          ) : (
-            <div className="flex flex-col items-center">
-              {isOtpSent ? (
-                <>
-                  <input type="text" placeholder="Enter 6-digit OTP" className="mb-2 p-2 border rounded" maxLength={6} />
-                  <Button size="lg" className="comic-button group" disabled={loginButtonText === "Verifying OTP..."}  onClick={handleVerifyOtpClick}>
-                    {verifyButtonText}
-                  </Button>
-                  <Button size="lg" className="comic-button group mt-2" disabled={!canResend} onClick={handleLoginClick}>
-                    {canResend ? 'Resend OTP' : 'Resend in 2 mins'}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <input type="email" placeholder="Enter your email" className="mb-2 p-2 border rounded" />
-                  <Button size="lg" className="comic-button group" disabled={loginButtonText !== "Login"} onClick={handleLoginClick}>
-                    {loginButtonText}
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          {[
-            { type: 'Standard', icon: '📝' },
-            { type: 'Story', icon: '📖' },
-            { type: 'Poll', icon: '📊' },
-            { type: 'Campaign', icon: '🎯' },
-            { type: 'Emergency', icon: '🚨' },
-            { type: 'Volunteer', icon: '🤝' },
-          ].map(({ type, icon }) => (
-            <div
-              key={type}
-              className="bg-card comic-border rounded-lg p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="text-3xl mb-3">{icon}</div>
-              <h3 className="font-medium text-lg mb-2">{type} Post</h3>
-              <p className="text-sm text-muted-foreground">
-                Create a {type.toLowerCase()} post to engage with your audience.
-              </p>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-wrap justify-center gap-6 w-full">
+        {[
+          { type: "Create Pet", icon: "🦴", href: "/create-pet" },
+          { type: "Pet Forms", icon: "📋", href: "/pet-forms" },
+          { type: "My Posts", icon: "📝", href: "/user-posts" },
+        ].map(({ type, icon, href }) => (
+          <Link
+            key={type}
+            href={href}
+            className="flex flex-col items-center justify-center rounded-lg border-2 border-orange-600 bg-orange-100 p-6 text-orange-900 shadow-md transition hover:scale-105 hover:bg-orange-200 dark:border-orange-500 dark:bg-orange-900 dark:text-orange-300 dark:hover:bg-orange-800 sm:flex-1 sm:min-w-[180px]"
+          >
+            <div className="text-5xl mb-4">{icon}</div>
+            <h3 className="text-xl font-semibold mb-2">{type}</h3>
+            <p className="text-sm text-orange-800 dark:text-orange-400">
+              Manage {type.toLowerCase()} with our intuitive interface.
+            </p>
+            <ArrowRight className="mt-3 h-5 w-5 text-orange-700 dark:text-orange-300" />
+          </Link>
+        ))}
       </div>
     </div>
   );

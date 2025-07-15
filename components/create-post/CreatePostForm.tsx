@@ -12,20 +12,46 @@ import { Loader2 } from "lucide-react";
 import { PostTypeContent } from "@/components/create-post/PostTypeContent";
 import { PostTypeSelector } from "@/components/create-post/PostTypeSelector";
 import { FileUploadSection } from "@/components/create-post/FileUploadSection";
-import { basePostSchema } from "@/lib/validation/post-schemas";
-import { createPost } from "@/lib/api/posts";
+import * as apiPosts from "@/services/apiPosts";
+import * as clientApi from "@/services/clientApi";
 import { useRouter } from "next/navigation";
 
-export type PostType = 
-  | "standard" 
-  | "story" 
-  | "poll" 
-  | "link" 
-  | "campaign" 
-  | "volunteer" 
-  | "new_profile" 
-  | "sponsored" 
+export type PostType =
+  | "standard"
+  | "story"
+  | "poll"
+  | "link"
+  | "campaign"
+  | "volunteer"
+  | "new_profile"
+  | "sponsored"
   | "emergency";
+
+const basePostSchema = z.object({
+  type: z.enum([
+    "standard",
+    "story",
+    "poll",
+    "link",
+    "campaign",
+    "volunteer",
+    "new_profile",
+    "sponsored",
+    "emergency",
+  ]),
+  content: z.string().optional(),
+  pollOptions: z.array(z.string()).optional(),
+  pollDuration: z.number().min(1).max(168).optional(),
+  postImage: z
+    .any()
+    .optional()
+    .refine((file) => !file || file instanceof File, "Invalid image file"),
+  postVideo: z
+    .any()
+    .optional()
+    .refine((file) => !file || file instanceof File, "Invalid video file"),
+  // Additional fields can be added per post type dynamically if needed
+});
 
 export type PostFormData = z.infer<typeof basePostSchema>;
 
@@ -33,7 +59,7 @@ export function CreatePostForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [postType, setPostType] = useState<PostType>("standard");
-  
+
   const methods = useForm<PostFormData>({
     resolver: zodResolver(basePostSchema),
     defaultValues: {
@@ -41,67 +67,64 @@ export function CreatePostForm() {
       type: "standard",
       pollOptions: ["", ""],
       pollDuration: 24,
+      postImage: null,
+      postVideo: null,
     },
-    mode: "onChange"
+    mode: "onChange",
   });
 
   const { handleSubmit, reset, setValue, watch } = methods;
-  
-  // Watch for files
+
   const postImage = watch("postImage");
   const postVideo = watch("postVideo");
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = clientApi.getAuthToken();
     if (!token) {
-      router.push('/'); // Redirect to home page if not authenticated
+      router.replace("/"); // Redirect to home page if not authenticated
     }
   }, [router]);
 
-  // Handle post type change
   const handlePostTypeChange = (type: PostType) => {
     setPostType(type);
     setValue("type", type);
   };
 
-  // Handle form submission
   const onSubmit = async (data: PostFormData) => {
     setIsSubmitting(true);
-    
+
     try {
-      // Create form data for multipart submission
       const formData = new FormData();
-      
-      // Add all text fields
+
+      // Add primitive fields except file uploads
       Object.entries(data).forEach(([key, value]) => {
-        if (key !== "postImage" && key !== "postVideo") {
-          if (key === "pollOptions" && Array.isArray(value)) {
-            // Handle array of poll options
-            value.forEach((option, index) => {
-              formData.append(`pollOptions[${index}]`, option);
-            });
-          } else if (value !== undefined && value !== null) {
-            formData.append(key, String(value));
-          }
+        if (key === "postImage" || key === "postVideo") return;
+
+        if (Array.isArray(value)) {
+          value.forEach((val, idx) => {
+            formData.append(`${key}[${idx}]`, String(val));
+          });
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
         }
       });
-      
-      // Add files if they exist
-      if (data.postImage && data.postImage instanceof File) {
+
+      if (data.postImage instanceof File) {
         formData.append("postImage", data.postImage);
       }
-      
-      if (data.postVideo && data.postVideo instanceof File) {
+
+      if (data.postVideo instanceof File) {
         formData.append("postVideo", data.postVideo);
       }
-      
-      // Submit the form
-      await createPost(formData);
-      
+
+      await apiPosts.createPost(formData);
+
       toast.success("Post created successfully!");
       reset();
-    } catch (error) {
-      console.error("Error creating post:", error);
+      setPostType("standard");
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to create post:", err);
       toast.error("Failed to create post. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -112,30 +135,23 @@ export function CreatePostForm() {
     <FormProvider {...methods}>
       <Form {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <PostTypeSelector 
-            currentType={postType} 
-            onTypeChange={handlePostTypeChange} 
-          />
-          
+          <PostTypeSelector currentType={postType} onTypeChange={handlePostTypeChange} />
+
           <Tabs defaultValue="content" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="media">Media</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="content" className="space-y-4 pt-4">
               <PostTypeContent type={postType} />
             </TabsContent>
-            
+
             <TabsContent value="media" className="space-y-4 pt-4">
-              <FileUploadSection 
-                postType={postType} 
-                postImage={postImage} 
-                postVideo={postVideo} 
-              />
+              <FileUploadSection postType={postType} postImage={postImage} postVideo={postVideo} />
             </TabsContent>
           </Tabs>
-          
+
           <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

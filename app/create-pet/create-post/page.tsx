@@ -1,8 +1,12 @@
-"use client";
-
 import { Suspense } from "react";
 import { CreatePostForm } from "@/components/create-post/CreatePostForm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CreatePostPage() {
@@ -10,7 +14,9 @@ export default function CreatePostPage() {
     <div className="container mx-auto py-8 px-4">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold">Create New Post</CardTitle>
+          <CardTitle className="text-2xl font-semibold">
+            Create New Post
+          </CardTitle>
           <CardDescription>
             Share content with your audience by creating a new post
           </CardDescription>

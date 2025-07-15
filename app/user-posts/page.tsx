@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+import { fetchWithAuth } from "@/services/clientApi";
 
 interface Media {
   id: string;
@@ -30,22 +31,15 @@ export default function UserPostsPage() {
   const [postsByType, setPostsByType] = useState<Record<string, Post[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const token = localStorage.getItem("auth_token");
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `${process.env.NEXT_PUBLIC_PROD_URL}/feed/posts?cursor=0&limit=50`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
         );
-        const data = await response.json();
-        if (data.success) {
+        if (response.success) {
+          const data = response?.data;
           const grouped: Record<string, Post[]> = {};
           data.posts.forEach((post: Post) => {
             if (!grouped[post.type]) grouped[post.type] = [];
@@ -73,22 +67,29 @@ export default function UserPostsPage() {
     poll: "Polls",
   };
 
-  if (loading) return <div className="text-center text-base sm:text-lg py-8">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-orange-600 dark:text-orange-400" />
+      </div>
+    );
 
   return (
     <div className="container mx-auto py-4 sm:py-6 md:py-8 px-4 sm:px-6 lg:px-8">
+      <h1 className="text-4xl font-extrabold mb-8 text-center text-orange-900 dark:text-orange-200 select-none">
+        My Posts
+      </h1>
       <Tabs
         defaultValue={selectedType || ""}
         onValueChange={(value) => setSelectedType(value || null)}
         className="w-full"
       >
-        <TabsList className="flex  justify-around gap-2 sm:gap-3 mb-4 h-12 sm:mb-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] 
-  [&::-webkit-scrollbar]:hidden ">
+        <TabsList className="flex justify-center gap-3 mb-6 overflow-x-auto scrollbar-none">
           {Object.keys(postsByType).map((type) => (
             <TabsTrigger
               key={type}
               value={type}
-              className="px-3 py-1.5 text-sm sm:text-base font-medium rounded-md whitespace-nowrap"
+              className="px-4 py-2 text-sm sm:text-base font-semibold rounded-md whitespace-nowrap cursor-pointer bg-orange-200 dark:bg-orange-700 text-orange-900 dark:text-orange-200 hover:bg-orange-300 dark:hover:bg-orange-600 transition-colors"
             >
               {typeTitles[type] || type}
             </TabsTrigger>
@@ -97,30 +98,33 @@ export default function UserPostsPage() {
 
         {Object.entries(postsByType).map(([type, posts]) => (
           <TabsContent key={type} value={type} className="mt-4 sm:mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {posts.map((post) => (
                 <Card
                   key={post.id}
-                  className="bg-card rounded-lg shadow-md h-full flex flex-col transition-transform hover:scale-[1.02]"
+                  className="bg-orange-100 dark:bg-orange-900 rounded-lg shadow-md h-full flex flex-col transition-transform hover:scale-[1.02] cursor-default"
                 >
-                  <CardHeader className="flex flex-row items-center space-x-3 sm:space-x-4 p-4">
-                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                      <AvatarImage src={post.authorAvatar} alt={post.authorName} />
-                      <AvatarFallback className="text-xs sm:text-sm">
+                  <CardHeader className="flex items-center space-x-3 p-4 pb-2">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={post.authorAvatar}
+                        alt={post.authorName}
+                      />
+                      <AvatarFallback>
                         {post.authorName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <CardTitle className="text-base sm:text-lg font-medium leading-tight">
+                      <CardTitle className="text-lg font-semibold text-orange-900 dark:text-orange-200">
                         {post.authorName}
                       </CardTitle>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
+                      <p className="text-xs text-orange-700 dark:text-orange-400">
                         {new Date(post.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-0 flex-1 flex flex-col">
-                    <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 line-clamp-3">
+                    <p className="text-sm text-orange-800 dark:text-orange-300 mb-4 line-clamp-3">
                       {post.content}
                     </p>
                     {post.media.map((mediaItem) => (
@@ -128,10 +132,10 @@ export default function UserPostsPage() {
                         key={mediaItem.id}
                         src={mediaItem.url}
                         alt="Post media"
-                        className="w-full h-auto max-h-48 sm:max-h-64 object-cover rounded mb-3 sm:mb-4"
+                        className="w-full h-auto max-h-48 object-cover rounded mb-4"
                       />
                     ))}
-                    <div className="mt-auto flex justify-between items-center text-xs sm:text-sm text-muted-foreground">
+                    <div className="mt-auto flex justify-between text-xs text-orange-700 dark:text-orange-400">
                       <span>{post.likesCount} Likes</span>
                       <span>{post.commentsCount} Comments</span>
                     </div>

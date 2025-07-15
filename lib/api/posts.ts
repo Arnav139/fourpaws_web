@@ -1,61 +1,67 @@
 "use client";
 
-/**
- * API functions for creating and managing posts
- */
+const API_BASE_URL = process.env.NEXT_PUBLIC_PROD_URL || "";
 
-// Function to create a new post
-export async function createPost(formData: FormData) {
-  try {
-    // Get auth token from local storage or context
-    const token = localStorage.getItem("auth_token") || "";
-    
-    // In a real app, you would check if token exists and redirect to login if not
+class ApiService {
+  private getAuthToken(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("auth_token");
+  }
+
+  private logoutOnUnauthorized() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_token");
+      window.location.href = "/";
+    }
+  }
+
+  private async fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
+    const token = this.getAuthToken();
     if (!token) {
+      this.logoutOnUnauthorized();
       throw new Error("Authentication required");
     }
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_PROD_URL}/feed/posts`, {
+
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+
+    const response = await fetch(input, {
+      ...init,
+      headers,
+    });
+
+    if (response.status === 401) {
+      this.logoutOnUnauthorized();
+      throw new Error("Unauthorized. Logging out.");
+    }
+
+    return response;
+  }
+
+  async createPost(formData: FormData) {
+    const response = await this.fetchWithAuth(`${API_BASE_URL}/feed/posts`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Note: Don't set Content-Type for multipart/form-data
-        // The browser will set the correct boundary
-      },
+      // Important: Do NOT set Content-Type explicitly for FormData
       body: formData,
     });
-    
+
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || "Failed to create post");
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error("API Error:", error);
-    throw error;
-  }
-}
 
-// Function to get posts (for future use)
-export async function getPosts() {
-  try {
-    // Get auth token
-    const token = localStorage.getItem("auth_token") || "";
-    
-    const response = await fetch("/posts", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
+    return await response.json();
+  }
+
+  async getPosts() {
+    const response = await this.fetchWithAuth(`${API_BASE_URL}/posts`);
+
     if (!response.ok) {
       throw new Error("Failed to fetch posts");
     }
-    
+
     return await response.json();
-  } catch (error) {
-    console.error("API Error:", error);
-    throw error;
   }
 }
+
+export const apiService = new ApiService();
